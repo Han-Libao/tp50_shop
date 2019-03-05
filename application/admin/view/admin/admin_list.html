@@ -1,0 +1,111 @@
+<table class="layui-hide" id="test" lay-filter="test"></table>
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container">
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckData">获取选中行数据</button>
+    <button class="layui-btn layui-btn-sm" lay-event="getCheckLength">获取选中数目</button>
+    <button class="layui-btn layui-btn-sm" lay-event="isAll">验证是否全选</button>
+    <button class="layui-btn" lay-event='addAdmin'>
+    <i class="layui-icon">&#xe608;</i> 添加
+  </button>
+  </div>
+</script>
+ 
+<script type="text/html" id="barDemo">
+  <div class="layui-btn-group">
+    <button class="layui-btn layui-btn-sm" lay-event="edit">
+      <i class="layui-icon">&#xe642;</i>
+    </button>
+    <button class="layui-btn layui-btn-sm" lay-event="del">
+      <i class="layui-icon">&#xe640;</i>
+    </button>
+  </div>
+</script>
+<script>
+layui.use('table', function(){
+  var table = layui.table;
+  
+  table.render({
+    elem: '#test'
+    ,toolbar: '#toolbarDemo'
+    ,url:'{:url("admin/admin_info")}'
+    ,cellMinWidth: 80 //全局定义常规单元格的最小宽度，layui 2.2.1 新增
+    ,toolbar:"#toolbarDemo"
+    ,defaultToolba:[]
+    ,cols: [[
+      {type: 'checkbox', fixed: 'left'}
+      ,{field:'admin_id', width:80, title: 'ID', sort: true}
+      ,{field:'admin_name', width:180, title: '用户名', edit: 'text'}
+      ,{field:'admin_email', width:180, title: '邮箱'}
+      ,{field:'admin_tel', width:180, title: '电话'}
+      ,{field:'last_login_time', width:180, title: '最后登入时间'}
+      ,{field:'last_login_ip', width:100, title: '最后登入IP'}
+      ,{fixed: 'right', title:'操作', toolbar: '#barDemo', width:100}
+    ]]
+    ,limit:5
+    
+    ,page: { //支持传入 laypage 组件的所有参数（某些参数除外，如：jump/elem） - 详见文档
+      layout: ['limit', 'count', 'prev', 'page', 'next', 'skip'] //自定义分页布局
+      //,curr: 5 //设定初始在第 5 页
+      
+      ,groups: 7 //只显示 1 个连续页码
+      ,first: true //不显示首页
+      ,last: true //不显示尾页
+      
+    }
+    //,page: true
+
+  });
+  //监听单元格编辑
+  table.on('edit(test)', function(obj){
+    var value = obj.value //得到修改后的值
+    ,data = obj.data //得到所在行所有键值
+    ,field = obj.field; //得到字段
+    layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value);
+  });
+
+  //头工具栏事件
+  table.on('toolbar(test)', function(obj){
+    var checkStatus = table.checkStatus(obj.config.id);
+    switch(obj.event){
+      case 'getCheckData':
+        var data = checkStatus.data;
+        layer.alert(JSON.stringify(data));
+      break;
+      case 'getCheckLength':
+        var data = checkStatus.data;
+        layer.msg('选中了：'+ data.length + ' 个');
+      break;
+      case 'isAll':
+        layer.msg(checkStatus.isAll ? '全选': '未全选');
+      break;
+      case 'addAdmin':
+        window.location.href = "{:url('admin/admin_add')}"
+      break;
+    };
+  });
+  
+  //监听行工具事件
+  table.on('tool(test)', function(obj){
+    var data = obj.data;
+    //console.log(obj)
+    if(obj.event === 'del'){
+      layer.confirm('真的删除行么', function(index){
+        obj.del();
+        layer.close(index);
+      });
+    } else if(obj.event === 'edit'){
+      layer.prompt({
+        formType: 2
+        ,value: data.email
+      }, function(value, index){
+        obj.update({
+          email: value
+        });
+        layer.close(index);
+      });
+    }
+  });
+});
+  
+  
+</script>

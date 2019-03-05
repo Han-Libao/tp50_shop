@@ -1,0 +1,424 @@
+控制器（controller）
+
+
+视图（view）
+
+
+模型（model）
+
+Db::query('select * from think_user where id=?',[8]);
+Db::execute('insert into think_user (id, name) values (?, ?)',[8,'thinkphp']);
+
+基本查询
+// table方法必须指定完整的数据表名
+Db::table('think_user')->where('id',1)->find();
+
+查询数据集使用：
+Db::table('think_user')->where('status',1)->select();
+
+// 返回某个字段的值
+Db::table('think_user')->where('id',1)->value('name');
+
+/ 返回数组
+Db::table('think_user')->where('status',1)->column('name','id');//单条多列
+
+添加数据
+$data = ['foo' => 'bar', 'bar' => 'foo'];
+Db::table('think_user')->insert($data);
+//配置过不需要前缀
+Db::name('user')->insert($data);
+
+Db::name('user')->insert($data);
+$userId = Db::name('user')->getLastInsID();
+
+//添加多条数据 
+Db::name('user')->insertAll($data);
+
+助手函数
+// 添加单条数据
+db('user')->insert($data);
+// 添加多条数据
+db('user')->insertAll($list);
+
+更新数据表中的数据
+Db::table('think_user')->where('id', 1)->update(['name' => 'thinkphp']);
+
+如果数据中包含主键，可以直接使用：
+Db::table('think_user')->update(['name' => 'thinkphp','id'=>1]);
+
+如果要更新的数据需要使用SQL函数或者其它字段，可以使用下面的方式：
+Db::table('user')->where('id', 1)
+    ->update([
+        'login_time'  => Db::raw('now()'),
+        'login_times' => Db::raw('login_times+1'),
+    ]);
+
+更新某个字段的值：
+Db::table('think_user')->where('id',1)->setField('name', 'thinkphp');
+
+自增或自减一个字段的值
+setInc/setDec 如不加第二个参数，默认值为1
+
+延迟更新
+setInc/setDec支持延时更新，如果需要延时更新则传入第三个参数
+
+
+助手函数
+// 更新数据表中的数据
+db('user')->where('id',1)->update(['name' => 'thinkphp']);
+// 更新某个字段的值
+db('user')->where('id',1)->setField('name','thinkphp');
+// 自增 score 字段
+db('user')->where('id', 1)->setInc('score');
+// 自减 score 字段
+db('user')->where('id', 1)->setDec('score');
+
+快捷更新
+Db::table('data')->where('id',1)
+    ->inc('read')->dec('score',3)
+    ->exp('name','UPPER(name)')->update();
+
+删除数据表中的数据
+
+// 根据主键删除
+Db::table('think_user')->delete(1);
+Db::table('think_user')->delete([1,2,3]);
+
+// 条件删除    
+Db::table('think_user')->where('id',1)->delete();
+Db::table('think_user')->where('id','<',10)->delete();
+助手函数
+// 根据主键删除
+db('user')->delete(1);
+// 条件删除    
+db('user')->where('id',1)->delete();
+
+条件查询方法
+可以使用where方法进行AND条件查询：（连续where）
+
+使用whereOr方法进行OR查询
+多字段相同条件的OR查询可以简化为如下方式：
+->where('name|title','like','%thinkphp')
+
+混合查询
+
+where方法和whereOr方法在复杂的查询条件中经常需要配合一起混合使用，下面举个例子：
+
+$result = Db::table('think_user')->where(function ($query) {
+    $query->where('id', 1)->whereor('id', 2);
+})->whereOr(function ($query) {
+    $query->where('name', 'like', 'think')->whereOr('name', 'like', 'thinkphp');
+})->select();
+生成的sql语句类似于下面：
+SELECT * FROM `think_user` WHERE  (  `id` = 1 OR `id` = 2 ) OR (  `name` LIKE 'think' OR `name` LIKE 'thinkphp' )
+注意闭包查询里面的顺序，而且第一个查询方法用where或者whereOr是没有区别的。
+
+使用getTableInfo可以获取表信息，信息类型 包括 fields,type,bind,pk，以数组的形式展示，可以指定某个信息进行获取
+
+查询表达式
+
+表达式	含义
+EQ、=	等于（=）
+NEQ、<>	不等于（<>）
+GT、>	大于（>）
+EGT、>=	大于等于（>=）
+LT、<	小于（<）
+ELT、<=	小于等于（<=）
+LIKE	模糊查询
+[NOT] BETWEEN	（不在）区间查询
+[NOT] IN	（不在）IN 查询
+[NOT] NULL	查询字段是否（不）是NULL
+[NOT] EXISTS	EXISTS查询
+EXP	表达式查询，支持SQL语法
+> time	时间比较
+< time	时间比较
+between time	时间比较
+notbetween time	时间比较
+
+
+链式操作在完成查询后会自动清空链式操作的所有传值。简而言之，链式操作的结果不会带入后面的其它查询。
+
+系统支持的链式操作方法有：
+连贯操作	作用	支持的参数类型
+where*	用于AND查询	字符串、数组和对象
+whereOr*	用于OR查询	字符串、数组和对象
+wheretime*	用于时间日期的快捷查询	字符串
+table	用于定义要操作的数据表名称	字符串和数组
+alias	用于给当前数据表定义别名	字符串
+field*	用于定义要查询的字段（支持字段排除）	字符串和数组
+order*	用于对结果排序	字符串和数组
+limit	用于限制查询结果数量	字符串和数字
+page	用于查询分页（内部会转换成limit）	字符串和数字
+group	用于对查询的group支持	字符串
+having	用于对查询的having支持	字符串
+join*	用于对查询的join支持	字符串和数组
+union*	用于对查询的union支持	字符串、数组和对象
+view*	用于视图查询	字符串、数组
+distinct	用于查询的distinct支持	布尔值
+lock	用于数据库的锁机制	布尔值
+cache	用于查询缓存	支持多个参数
+relation*	用于关联查询	字符串
+with*	用于关联预载入	字符串、数组
+bind*	用于数据绑定操作	数组或多个参数
+comment	用于SQL注释	字符串
+force	用于数据集的强制索引	字符串
+master	用于设置主服务器读取数据	布尔值
+strict	用于设置是否严格检测字段名是否存在	布尔值
+sequence	用于设置Pgsql的自增序列名	字符串
+failException	用于设置没有查询到数据是否抛出异常	布尔值
+partition	用于设置分表信息	数组 字符串
+
+使用事务处理的话，需要数据库引擎支持事务处理。比如 MySQL 的 MyISAM 不支持事务处理，需要使用 InnoDB 引擎。
+
+使用 transaction 方法操作数据库事务，当发生异常会自动回滚，例如：
+
+自动控制事务处理
+
+Db::transaction(function(){
+    Db::table('think_user')->find(1);
+    Db::table('think_user')->delete(1);
+});
+
+
+手动控制事务，例如：
+
+// 启动事务
+Db::startTrans();
+try{
+    Db::table('think_user')->find(1);
+    Db::table('think_user')->delete(1);
+    // 提交事务
+    Db::commit();    
+} catch (\Exception $e) {
+    // 回滚事务
+    Db::rollback();
+}
+
+模型类可以使用静态调用或者实例化调用两种方式，例如：
+// 使用 Loader 类实例化（单例）
+$user = Loader::model('User');
+// 或者使用助手函数`model`
+$user = model('User');
+
+添加一条数据
+
+第一种是实例化模型对象后赋值并保存：
+$user           = new User;
+$user->name     = 'thinkphp';
+$user->email    = 'thinkphp@qq.com';
+$user->save();
+$user->data([
+    'name'  =>  'thinkphp',
+    'email' =>  'thinkphp@qq.com'
+]);
+$user->save();
+$user = new User($_POST);
+// 过滤post数组中的非数据表字段数据
+$user->allowField(true)->save();
+$user->allowField(['name','email'])->save();
+
+// 获取自增ID
+echo $user->id;
+如果你的主键不是id，而是user_id的话$user->user_id;
+
+实例里面多次新增数据第二次开始必须使用下面的方式新增
+$user->isUpdate(false)->save();
+
+$user = new User;
+$list = [
+    ['id'=>1, 'name'=>'thinkphp', 'email'=>'thinkphp@qq.com'],
+    ['id'=>2, 'name'=>'onethink', 'email'=>'onethink@qq.com'],
+];
+$user->saveAll($list, false);
+
+查找并更新
+
+在取出数据后，更改字段内容后更新数据。
+
+$user = User::get(1);
+$user->name     = 'thinkphp';
+$user->email    = 'thinkphp@qq.com';
+$user->save();
+
+
+直接更新数据
+
+也可以直接带更新条件来更新数据
+
+$user = new User;
+// save方法第二个参数为更新条件
+$user->save([
+    'name'  => 'thinkphp',
+    'email' => 'thinkphp@qq.com'
+],['id' => 1]);
+
+删除模型数据，可以在实例化后调用delete方法
+$user = User::get(1);
+$user->delete();
+
+根据主键删除
+User::destroy(1);
+// 支持批量删除多个数据
+User::destroy('1,2,3');
+
+条件删除
+User::destroy(['status' => 0]);
+
+还支持使用闭包删除，例如：
+
+User::destroy(function($query){
+    $query->where('id','>',10);
+});
+
+或者通过数据库类的查询条件删除
+
+User::where('id','>',10)->delete();
+
+获取单个数据
+取出主键为1的数据
+$user = User::get(1);
+echo $user->name;
+
+// 使用数组查询
+$user = User::get(['name' => 'thinkphp']);
+
+// 使用闭包查询
+$user = User::get(function($query){
+    $query->where('name', 'thinkphp');
+});
+echo $user->name;
+
+取出主键为1的数据
+$user = User::get(1);
+echo $user->name;
+
+// 使用数组查询
+$user = User::get(['name' => 'thinkphp']);
+
+// 使用闭包查询
+$user = User::get(function($query){
+    $query->where('name', 'thinkphp');
+});
+echo $user->name;
+
+取出主键为1的数据
+$user = User::get(1);
+echo $user->name;
+
+// 使用数组查询
+$user = User::get(['name' => 'thinkphp']);
+
+// 使用闭包查询
+$user = User::get(function($query){
+    $query->where('name', 'thinkphp');
+});
+echo $user->name;
+
+获取某个字段或者某个列的值
+
+// 获取某个用户的积分
+User::where('id',10)->value('score');
+// 获取某个列的所有值
+User::where('status',1)->column('name');
+// 以id为索引
+User::where('status',1)->column('name','id');
+User::where('status',1)->column('id,name'); // 同tp3的getField
+
+
+获取某个字段或者某个列的值
+
+// 获取某个用户的积分
+User::where('id',10)->value('score');
+// 获取某个列的所有值
+User::where('status',1)->column('name');
+// 以id为索引
+User::where('status',1)->column('name','id');
+User::where('status',1)->column('id,name'); // 同tp3的getField
+
+获取器
+获取器的作用是在获取数据的字段值后自动进行处理，例如，我们需要对状态值进行转换，可以使用：
+
+class User extends Model 
+{
+    public function getStatusAttr($value)
+    {
+        $status = [-1=>'删除',0=>'禁用',1=>'正常',2=>'待审核'];
+        return $status[$value];
+    }
+}
+
+数据表的字段会自动转换为驼峰法，一般status字段的值采用数值类型，我们可以通过获取器定义，自动转换为字符串描述。
+
+$user = User::get(1);
+echo $user->status; // 例如输出“正常”
+
+获取器还可以定义数据表中不存在的字段，例如：
+
+class User extends Model 
+{
+    public function getStatusTextAttr($value,$data)
+    {
+        $status = [-1=>'删除',0=>'禁用',1=>'正常',2=>'待审核'];
+        return $status[$data['status']];
+    }
+}
+
+
+获取原始数据
+
+如果你定义了获取器的情况下，希望获取数据表中的原始数据，可以使用：
+
+$user = User::get(1);
+// 通过获取器获取字段
+echo $user->status;
+// 获取原始字段数据
+echo $user->getData('status');
+// 获取全部原始数据
+dump($user->getData());
+
+
+修改器
+
+修改器的作用是可以在数据赋值的时候自动进行转换处理，例如：
+
+class User extends Model 
+{
+    public function setNameAttr($value)
+    {
+        return strtolower($value);
+    }
+}
+
+如下代码实际保存到数据库中的时候会转为小写
+
+$user = new User();
+$user->name = 'THINKPHP';
+$user->save();
+echo $user->name; // thinkphp
+
+也可以进行序列化字段的组装：
+
+class User extends Model 
+{
+    public function setNameAttr($value,$data)
+    {
+        return serialize($data);
+    }
+}
+
+    修改器方法的第二个参数会自动传入当前的所有数据数组
+
+《验证器 （validator）》
+
+验证码：
+composer.json （
+"require": {
+        "php": ">=5.4.0",
+        "topthink/framework": "5.0.*",
+	"topthink/think-captcha": "1.*"
+    },
+）
+composer update
+
+
+
