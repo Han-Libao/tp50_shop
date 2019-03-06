@@ -13,4 +13,22 @@ class Admin extends Model
 		echo $this->getLastSql();
 		return $data;
 	}*/
+	public $insert = ['admin_salt'];
+	public $readonly = ['admin_name','admin_salt'];
+	public $salt;
+
+	public function setAdminPwdAttr($value){
+		$this->salt = createSalt();
+		return createPwd($value,$this->salt);
+	}
+
+	public function setAdminSaltAttr(){
+		return $this->salt;
+	}
+
+	public function getStatusAttr($value)
+    {
+        $status = [0=>'禁用',1=>'正常'];
+        return $status[$value];
+    }
 }

@@ -36,7 +36,15 @@ class Admin extends Controller
 	public function admin_add(){
 		if($this->rq->isPost() && $this->rq->isAjax()){
 			$data = input('post.');
-			echo json_encode($data);
+			/*$salt = createSalt();
+			$data['admin_pwd'] = createPwd($data['admin_pwd'],$salt);*/
+			$add = model('Admin')->allowField(true)->save($data);
+			//echo model('Admin')->getLastSql();
+			if($add){
+				echo json_encode(['font'=>'成功','code'=>200]);
+			}else{
+				echo json_encode(['font'=>'失败','code'=>400]);
+			}
 		}else{
 			return $this->fetch();
 		}

@@ -1,0 +1,49 @@
+  <div class="layui-btn-container">
+    <button class="layui-btn" lay-event='addAdmin'>
+    <i class="layui-icon">&#xe608;</i> 添加
+    </button>
+  </div>
+<table class="layui-table">
+    <thead>
+        <tr>
+            <td>分类id</td>
+            <td>分类名称</td>
+            <td>分类添加时间</td>
+            <td>操作</td>
+        </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td></td>
+        <td></td>
+        <td></td>
+        <td></td>
+      </tr>
+    </tbody> 
+</table>  
+ 
+
+  <div class="layui-btn-group">
+    <button class="layui-btn layui-btn-sm" lay-event="edit">
+      <i class="layui-icon">&#xe642;</i>
+    </button>
+    <button class="layui-btn layui-btn-sm" lay-event="del">
+      <i class="layui-icon">&#xe640;</i>
+    </button>
+  </div>
+
+<script>
+layui.use('table', function(){
+  var table = layui.table;
+
+  //监听单元格编辑
+  table.on('edit(test)', function(obj){
+    var value = obj.value //得到修改后的值
+    ,data = obj.data //得到所在行所有键值
+    ,field = obj.field; //得到字段
+    layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value);
+  });
+});
+  
+  
+</script>
