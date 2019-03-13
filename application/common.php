@@ -21,3 +21,15 @@ function createSalt(){
 function createPwd($pwd,$salt){
     return md5(md5($pwd).md5($salt).'shop');
 }
+
+function getInfo($cateInfo,$pid=0,$level=0){
+    static $info=[];
+    foreach($cateInfo as $k=>$v){
+        if($v['pid']==$pid){
+            ///$v['level']=$level;
+            $info[]=$v;
+            getInfo($cateInfo,$v['cate_id'],$v['level']+1);
+        }
+    }
+    return $info;
+}

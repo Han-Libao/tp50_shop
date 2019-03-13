@@ -1,8 +1,9 @@
-  <div class="layui-btn-container">
-    <button class="layui-btn" lay-event='addAdmin'>
-    <i class="layui-icon">&#xe608;</i> 添加
-    </button>
-  </div>
+<script type="text/javascript" src="__STATIC__/layui/jquery-3.3.1.js"></script>
+<div class="layui-btn-container">
+  <button class="layui-btn">
+    <a href="{:url('Category/addCategory')}" style="color:#fff;"><i class="layui-icon">&#xe608;</i> 添加</a>
+  </button>
+</div>
 <table class="layui-table">
     <thead>
         <tr>
@@ -13,37 +14,131 @@
         </tr>
     </thead>
     <tbody>
-      <tr>
-        <td></td>
-        <td></td>
-        <td></td>
-        <td></td>
+      {volist name='data' id='cate'}
+      <tr class="showHide" pid="{$cate.pid}"  cate_id="{$cate.cate_id}" style="display:none;">
+        <td>
+          {:str_repeat('&nbsp;&nbsp;',$cate.level*2)}
+          <a href="#" class="showCate">+</a>
+          {$cate.cate_id}
+        </td>
+        <td>
+          {:str_repeat('&nbsp;&nbsp;',$cate.level*2)}
+          <span class="showInput">{$cate.cate_name}</span>
+          <input type="text" class="change layui-input layui-table-edit" column="cate_name" cate_id="{$cate.cate_id}" style="display:none;" value="{$cate.cate_name}">
+        </td>
+        <td>{$cate.cate_time}</td>
+        <td>
+          <div class="layui-btn-group">
+            <button class="layui-btn layui-btn-sm">
+              <a href="{:url('Category/addCategory',array('pid'=>$cate['cate_id']))}" style="color:#fff;">
+                <i class="layui-icon">&#xe654;</i>
+              </a>
+            </button>
+            <button class="layui-btn layui-btn-sm">
+              <a href="{:url('Category/changeCategory',array('cate_id'=>$cate['cate_id']))}" style="color:#fff;">
+                <i class="layui-icon">&#xe642;</i>
+              </a>
+            </button>
+            <button class="layui-btn layui-btn-sm del" cate_id="{$cate.cate_id}">
+              <i class="layui-icon">&#xe640;</i>
+            </button>
+          </div>
+        </td>
       </tr>
+      {/volist}
     </tbody> 
 </table>  
  
 
-  <div class="layui-btn-group">
-    <button class="layui-btn layui-btn-sm" lay-event="edit">
-      <i class="layui-icon">&#xe642;</i>
-    </button>
-    <button class="layui-btn layui-btn-sm" lay-event="del">
-      <i class="layui-icon">&#xe640;</i>
-    </button>
-  </div>
+  
 
 <script>
-layui.use('table', function(){
-  var table = layui.table;
+  $(function(){
+    layui.use('layer', function(){
+      var layer=layui.layer;
+      showTr(0);
+      //展示
+      function showTr(cate_id){
+          $('.showHide').each(function(index){
+              var pid=$(this).attr('pid');
+              if(pid==cate_id){
+                  $(this).show();
+              }
+          });
+      }
+      //隐藏
+      function hideTr(cate_id){
+          $('.showHide').each(function(index){
+              var pid=$(this).attr('pid');
+              if(pid==cate_id){
+                  $(this).hide();
+                  $(this).find('.showCate').html('+');
+                  var new_cate_id=$(this).attr('cate_id');
+                  hideTr(new_cate_id);
+              }
+          });
+      }
+      //加号点击事件（显示与隐藏）
+      $(".showCate").click(function(){
+        //获取当前对象文本值
+        var sign=$(this).html();
+        //获取自己id
+        var cate_id=$(this).parents('tr').attr('cate_id');
+        if(sign=="+"){
+            showTr(cate_id);
+            $(this).html('-');
+        }else{
+            hideTr(cate_id);
+            $(this).html('+');
+        }
+      });
+      //即点即改触发事件
+      $('.showInput').click(function(){
+          $(this).next('input').show();
+          $(this).hide();
+      });
+      //给文本框加失去焦点事件
+      $('.change').blur(function(){
+          var _this=$(this);
+          //var column=_this.attr('column'); //获取当前修改的字段
+          var cate_id=_this.attr('cate_id'); //获取当前修改的主键
+          var val=_this.val(); //获取当前的修改内容
+          $.post(
+            '{:url("Category/changeCategory")}',
+            {cate_id:cate_id,cate_name:val},
+            function(msg){
+                layer.msg(msg.font,{icon:msg.code});
+                //if(msg.code==1){
+                    _this.hide();
+                    _this.prev('span').html(val);
+                    _this.prev('span').show();
+                //}
+            },'json'
+          );
+      });
+      //删除事件
+      $('.del').click(function(){
+        alert(1);
+          _this=$(this);
+          var cate_id=_this.attr('cate_id');
+          alert(cate_id);
+          return false;
+          $.post(
+            '{:url("Category/cateDel")}',
+            {cate_id:cate_id},
+            function(msg){
+                //console.log(msg);
+                layer.msg(msg.font,{icon:msg.code});
+                if(msg.code==1){
+                    _this.parents('tr').remove();
+                }
+            },'json'
+          )
+      });
 
-  //监听单元格编辑
-  table.on('edit(test)', function(obj){
-    var value = obj.value //得到修改后的值
-    ,data = obj.data //得到所在行所有键值
-    ,field = obj.field; //得到字段
-    layer.msg('[ID: '+ data.id +'] ' + field + ' 字段更改为：'+ value);
+    });
   });
-});
+
   
   
 </script>
